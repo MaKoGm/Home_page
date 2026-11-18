@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>~</title>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --bg-sel: #1c1c1c;
+            --fg: #d4be98;
+            --muted: #3b403c;
+            --mint: #7ec9a3;
+            --red: #f16e65;
+            --border: #1e1f1e;
+        }
+
+        /* EASTER EGG: MODO CRT VERDE NEÓN (Alt + C o :crt) */
+        body.crt-mode {
+            --bg: #020803;
+            --bg-sel: #09220d;
+            --fg: #55ff77;
+            --muted: #1b6629;
+            --mint: #00ff44;
+            --red: #00ff44;
+            --border: #1b6629;
+            text-shadow: 0 0 8px rgba(0, 255, 68, 0.55);
+            animation: crt-flicker 0.12s infinite;
+        }
+
+        body.crt-mode #pixel-clock {
+            filter: drop-shadow(0 0 8px rgba(0, 255, 68, 0.6));
+        }
+
+        body.crt-mode::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            inset: 0;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), 
+                radial-gradient(circle at center, transparent 50%, rgba(0, 0, 0, 0.88) 100%);
+            background-size: 100% 4px, 100% 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        body.crt-mode::after {
+            content: "CRT // PHOSPHOR";
+            position: absolute;
+            bottom: 18px;
+            right: 24px;
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            pointer-events: none;
+            z-index: 101;
+        }
+
+        @keyframes crt-flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.985; }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--fg);
+            font-family: 'JetBrains Mono', 'Fira Code', 'Iosevka', monospace;
+            font-size: 14px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 440px;
+            z-index: 1;
+        }
+
+        /* Reloj sólido estilo tty-clock (SVG crisp-edges) */
+        #pixel-clock {
+            width: 224px;
+            height: 70px;
+            fill: var(--mint);
+            shape-rendering: crispEdges;
+            margin-bottom: 14px;
+            transition: fill 0.2s ease, filter 0.2s ease;
+        }
+
+        /* Fecha discreta debajo del reloj */
+        .meta-line {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 34px;
+            letter-spacing: 1.5px;
+        }
+
+        /* Buscador minimalista encima de los atajos */
+        .prompt-wrapper {
+            width: 240px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            transition: border-color 0.15s;
+        }
+
+        .prompt-wrapper:focus-within {
+            border-color: var(--mint);
+        }
+
+        .prompt-prefix {
+            color: var(--mint);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        #cmd-input {
+            background: transparent;
+            border: none;
+            color: var(--fg);
+            font-family: inherit;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            caret-color: var(--mint);
+            text-shadow: inherit;
+        }
+
+        #cmd-input::placeholder {
+            color: var(--muted);
+        }
+
+        /* Menú de enlaces estilo alpha-nvim */
+        .nvim-menu {
+            list-style: none;
+            width: 240px;
+        }
+
+        .nvim-menu li {
+            margin-bottom: 12px;
+        }
+
+        .nvim-menu a {
+            color: var(--fg);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 3px 6px;
+            border-radius: 2px;
+        }
+
+        .nvim-menu a:hover,
+        .nvim-menu a.active {
+            background-color: var(--bg-sel);
+        }
+
+        .key {
+            color: var(--muted);
+            margin-right: 10px;
+        }
+
+        .key span {
+            color: var(--red);
+        }
+
+        .nvim-menu a:hover .key span,
+        .nvim-menu a.active .key span {
+            color: var(--fg);
+            text-shadow: none;
+        }
+
+        .arrow {
+            color: var(--muted);
+            margin-right: 8px;
+        }
+
+        .label {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="container">
+        <svg id="pixel-clock" viewBox="0 0 17 5" xmlns="http://www.w3.org/2000/svg"></svg>
+
+        <div class="meta-line" id="date">---</div>
+
+        <!-- Prompt de búsqueda -->
+        <form id="search-form" class="prompt-wrapper">
+            <span class="prompt-prefix">/</span>
+            <input type="text" id="cmd-input" placeholder="search..." autocomplete="off">
+        </form>
+
+        <!-- Lista de acciones (j/k o atajo directo) -->
+        <ul class="nvim-menu" id="menu-list">
+            <li><a href="https://youtube.com" id="link-y"><span class="key">[<span>y</span>]</span><span class="arrow">&gt;</span><span class="label">YouTube</span></a></li>
+            <li><a href="https://etsit.cv.uma.es/" id="link-c"><span class="key">[<span>c</span>]</span><span class="arrow">&gt;</span><span class="label">CampusVirtual</span></a></li>
+            <li><a href="https://monkeytype.com" id="link-m"><span class="key">[<span>m</span>]</span><span class="arrow">&gt;</span><span class="label">MonkeyType</span></a></li>
+            <li><a href="https://github.com" id="link-g"><span class="key">[<span>g</span>]</span><span class="arrow">&gt;</span><span class="label">GitHub</span></a></li>
+            <li><a href="https://web.whatsapp.com" id="link-w"><span class="key">[<span>w</span>]</span><span class="arrow">&gt;</span><span class="label">WhatsApp</span></a></li>
+        </ul>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
